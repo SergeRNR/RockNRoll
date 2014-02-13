@@ -1,32 +1,19 @@
 var player = null,
 	music_root = "http://192.168.3.130/RockNRoll/music/";
 	
+// Chrome doesn't support changing the sample rate, and uses whatever the hardware supports.
+// We cheat here.  Instead of resampling on the fly, we're currently just loading two different
+// files based on common hardware sample rates.
+var _sampleRate = (function() {
+    var AudioContext = (window.AudioContext || window.webkitAudioContext);
+    if (!AudioContext)
+        return 44100;
+    
+    return new AudioContext().sampleRate;
+}());	
+	
 function init(){
-	document.querySelector("input[type=range]").oninput = function(e) {
-		if(!player) return;
-
-		player.volume = +e.target.value;
-	};
 }
-
-/*        document.querySelector("input").onchange = function(e) {
-	if (player) player.stop();
-
-	player = AV.Player.fromFile(e.target.files[0]);
-	player.on('error', function(e) { throw e });
-
-	console.log(player)
-
-	player.on('metadata', function(data) {
-		console.log(data);
-
-		// Show the album art
-		if (data.coverArt)
-			document.querySelector("img").src = data.coverArt.toBlobURL();
-	});
-
-	player.play();
-}*/
 
 player = AV.Player.fromURL(music_root + "01 - Bad Attitude Shuffle.flac");
 player.on('error', function(e) { throw e });

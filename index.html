@@ -2,18 +2,78 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	<title>RockNRoll music to the world</title>	
+	<title>RockNRoll music to the world</title>
+	<script src="dgplayer/player.js" type="text/javascript" charset="utf-8"></script>
 	<script src="scripts/aurora.js" type="text/javascript" charset="utf-8"></script>
+	<script src="scripts/auroraplayer.js" type="text/javascript" charset="utf-8"></script>
 	<script src="scripts/flac.js" type="text/javascript" charset="utf-8"></script>
 	<script src="scripts/main.js" type="text/javascript" charset="utf-8"></script>	
+	
 	<link rel="stylesheet" href="style/css.css" type="text/css" media="screen" title="no title" charset="utf-8">
+	<link rel="stylesheet" href="dgplayer/player.css" type="text/css" media="screen" title="no title" charset="utf-8">
 </head>
 <body>
 	<div class="wrapper">
-		<input type="button" value="Play" onclick="play();" />
-		<input type="button" value="Pause" onclick="pause();" />
-		<input type="button" value="Stop" onclick="stop();" />
-		<input type="range" min=0 max=100 value=100>
+		
+		<div class="player" id="dgplayer" tabindex="0">
+			<div class="avatar">
+				<img src="dgplayer/resources/fallback_album_art.png">
+			</div>
+
+			<span class="title">Unknown Title</span>
+			<span class="artist">Unknown Artist</span>
+
+			<div class="button"></div>
+
+			<div class="volume">
+				<img src="dgplayer/resources/volume_high.png">
+				<div class="track">
+					<div class="progress"></div>
+					<div class="handle"></div>
+				</div>
+				<img src="dgplayer/resources/volume_low.png">
+			</div>
+
+			<div class="seek">
+				<span>0:00</span>
+				<div class="track">
+					<div class="loaded"></div>
+					<div class="progress"></div>
+				</div>
+				<span>-0:00</span>
+			</div>
+			<span class="file_description">Choose a FLAC file on your computer</span>
+		</div>		
 	</div>
+	<script type="text/javascript">
+
+(function(DGPlayer){
+//    if (unsupported) return;
+    
+    DGPlayer.volume = 100;
+    
+    var player, onplay;
+    var url = '';
+    
+    DGPlayer.on('play', onplay = function(){
+        if (player)
+            player.disconnect();
+            
+        player = new DGAuroraPlayer(AV.Player.fromURL(url), DGPlayer);
+        DGPlayer.off('play', onplay);
+    });
+    
+    DGPlayer.on('file', function(file) {        
+        if (file) {
+            if (player)
+                player.disconnect();
+                
+            player = new DGAuroraPlayer(AV.Player.fromFile(file), DGPlayer);
+            DGPlayer.off('play', onplay);
+        }
+    });
+    
+}(DGPlayer(document.getElementById('dgplayer'))));
+</script>
 </body>
 </html>
