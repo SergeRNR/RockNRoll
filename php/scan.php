@@ -1,7 +1,7 @@
 <?php
 $items = array();
 $items['music'] = array();
-$pathToDir = './music';
+$pathToDir = '../music';
 function collectFolderStuff($dir, &$items) {
 	$folderContents = scandir($dir);
 	if ($folderContents) {
@@ -19,5 +19,10 @@ function collectFolderStuff($dir, &$items) {
 	}
 }
 collectFolderStuff($pathToDir, $items['music']);
-echo json_encode($items);
+$result =  json_encode($items);
+$output = "var collection = ".$result.";";
+touch("../scripts/collection.js");
+chmod("../scripts/collection.js", 0755);
+file_put_contents("../scripts/collection.js", $output);
+echo $result;
 ?>
