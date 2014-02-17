@@ -5,8 +5,7 @@ rnr = {
 	player : null,
 	unsupported : null,
 	currentUrl : null,
-//	music_root : "http://192.168.3.130/RockNRoll/music/",
-	music_root : "music/",
+	music_root : "music",
 	
 	// methods
 	init : function(){
@@ -29,6 +28,7 @@ rnr.helpers = {
 
 rnr.getCollectionItem = function(path){
 	var el = collection.content;
+	path = path.slice(1);
 	for(var i=0; i<path.length; i++){
 		//we return the last element itself, not its content
 		el = (el[path[i]].content && i != path.length-1) ? el[path[i]].content : el[path[i]];
@@ -45,8 +45,8 @@ rnr.getCollectionItemFromHash = function(){
 };
 
 rnr.getNextItem = function(url){
+	var url = url || "";
 	var path = url.split("/");
-	path = path.slice(1);
 	if(path.length > 0){
 		var thisItem = path[path.length-1];
 		var parentItemPath = path.slice(0,-1);
@@ -57,7 +57,7 @@ rnr.getNextItem = function(url){
 				getNext = false;
 				return parentItem.content[i];
 			}
-			if(parentItem.content[i].path === (rnr.music_root + url))
+			if(i === thisItem)
 				getNext = true;
 		}
 		return null;
@@ -69,27 +69,26 @@ rnr.renderNavigationItems = function(path){
 	var hash = rnr.getCollectionItem(path);
 	hash = hash.content || hash;
 	var html = "";
-	var icon = path.length ? "arrow-up" : "music";
+	var icon = path.length > 1 ? "arrow-up" : "music";
 	var path_string = path.join("/");
 	html += '<div class="nav_back" id="nav_back" parent="'+path_string+'"><span><i class="fa fa-'+icon+'"></i></span></div>';
 	for(var i in hash){
 		if(hash[i].type === "folder" || hash[i].type === "flac"){
-			var child_path = path_string ? path_string+"/"+i : i;
-			html += rnr.renderItem(hash[i], child_path);
+			html += rnr.renderItem(hash[i]);
 		}
 	}
 	
 	rnr.helpers.html("nav_panel").innerHTML = html;	
 };
 
-rnr.renderItem = function(el, path){
+rnr.renderItem = function(el){
 	var html = "";
 	switch(el.type){
 		case "folder":
-			html += '<div class="nav_item_folder" path="'+path+'"><span><i class="fa fa-folder-o"></i>&nbsp;</span>'+el.title+'</div>';
+			html += '<div class="nav_item_folder" path="'+el.path+'"><span><i class="fa fa-folder-o"></i>&nbsp;</span>'+el.title+'</div>';
 			break;
 		case "flac":
-			html += '<div class="nav_item_flac" path="'+path+'"><span><i class="fa fa-play-circle-o"></i>&nbsp;</span>'+el.title+'</div>';
+			html += '<div class="nav_item_flac" path="'+el.path+'"><span><i class="fa fa-play-circle-o"></i>&nbsp;</span>'+el.title+'</div>';
 			break;
 	}
 	return html;
@@ -131,11 +130,11 @@ rnr.startPlayer = function(url, DGPlayer){
 			rnr.player.disconnect();
             
 		rnr.player = new DGAuroraPlayer(AV.Player.fromURL(url), DGPlayer);
-//		rnr.player.player.on("end", rnr.onend = function(){
-//			rnr.playNext(rnr.currentUrl);
-//			this.off("end", rnr.onend);
-//		});
-//		rnr.currentUrl = url;
+		rnr.player.player.on("end", rnr.onend = function(){
+			this.off("end", rnr.onend);
+			rnr.playNext(rnr.currentUrl);
+		});
+		rnr.currentUrl = url;
 	}
 };
 
@@ -156,13 +155,15 @@ rnr.onNavigationClick = function(e, el){
 			break;
 		case "nav_back":
 			var path = target.getAttribute("parent") || "";
-			path = path.split("/").slice(0,-1);
-			rnr.renderNavigationItems(path);
+			if(path !== "" && path !== rnr.music_root){
+				path = path.split("/").slice(0,-1);
+				rnr.renderNavigationItems(path);
+			}
 			break;
 		case "nav_item_flac":
 			var path = target.getAttribute("path") || "";
 			if(path)
-				rnr.startPlayer((rnr.music_root+path), DGPlayer(rnr.helpers.html("dgplayer")));
+				rnr.startPlayer((path), DGPlayer(rnr.helpers.html("dgplayer")));
 			break;
 		default :
 			if(target.parentNode)
