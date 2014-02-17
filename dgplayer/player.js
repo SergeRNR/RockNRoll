@@ -98,7 +98,7 @@ function DGPlayer(root) {
         });
         
         function setPlaying(play) {
-            if (playing == play)
+            if (playing = play)
                 button.classList.add("pause");
             else
                 button.classList.remove("pause");

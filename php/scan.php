@@ -1,7 +1,23 @@
 <?php
+include("cue_parser.php");
+include("flac.class.php");
+
 $items = array();
-$items['music'] = array();
-$pathToDir = '../music';
+$items["type"] = "folder";
+$items["content"] = array();
+$pathToDir = "../music";
+
+function processFilename($filename){
+	return $filename;
+}
+
+function isFlac($filename){
+	if (preg_match("/(\.flac)$/", $filename))
+		return true;
+	else
+		return false;
+}
+
 function collectFolderStuff($dir, &$items) {
 	$folderContents = scandir($dir);
 	if ($folderContents) {
@@ -11,18 +27,34 @@ function collectFolderStuff($dir, &$items) {
 			}
 			if (is_dir($dir . '/' . $item)) {
 				$items[$item] = array();
-				collectFolderStuff($dir . '/' . $item, $items[$item]);
+				$items[$item]["type"] = "folder";
+				$items[$item]["path"] = substr_replace($dir, '', 0, 3) . '/' . $item;
+				$items[$item]["title"] = $item;
+				$items[$item]["content"] = array();
+				collectFolderStuff($dir . '/' . $item, $items[$item]["content"]);
 			} else {
-				$items[] = $item;
+				if(isFlac($item)){
+					$data = new Flac ($dir . '/' . $item);
+					$comments = $data->vorbisComment;
+					
+					$items[$item] = array();
+					$items[$item]["type"] = "flac";
+					$items[$item]["path"] = substr_replace($dir, '', 0, 3) . '/' . $item;
+					$items[$item]["artist"] = (isset($comments["comments"]) && isset($comments["comments"]["artist"])) ? $comments["comments"]["artist"][0] : "";
+					$items[$item]["title"] = (isset($comments["comments"]) && isset($comments["comments"]["title"])) ? $comments["comments"]["title"][0] : $item;
+				}
 			}
 		}
 	}
 }
-collectFolderStuff($pathToDir, $items['music']);
-$result =  json_encode($items);
-$output = "var collection = ".$result.";";
+
+collectFolderStuff($pathToDir, $items["content"]);
+
+$result = json_encode($items);
+$output = "var collection = ".$result.";console.log(collection);";
 touch("../scripts/collection.js");
-chmod("../scripts/collection.js", 0755);
+chmod("../scripts/collection.js", 0766);
 file_put_contents("../scripts/collection.js", $output);
 echo $result;
+
 ?>

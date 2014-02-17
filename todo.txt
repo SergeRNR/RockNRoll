@@ -1,0 +1,6 @@
+TO DO :
+- collection structure
+- file browser
+- adress bar parser
+
+DONE :

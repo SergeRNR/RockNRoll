@@ -8,11 +8,13 @@ function DGAuroraPlayer(player, DGPlayer) {
     DGPlayer.duration = 0;
     DGPlayer.bufferProgress = 0;
 
-    var onplay, onpause, onvolume, onformat, onbuffer, onprogress, onduration, onmetadata;
+    var onplay, onpause, onvolume, onformat, onbuffer, onprogress, onduration, onmetadata, onend;
     
     DGPlayer.on('play', onplay = function() {
-        player.play();
-        DGPlayer.state = 'playing';
+    	if(player.currentTime !== player.duration){
+		    player.play();
+		    DGPlayer.state = 'playing';
+        }
     });
     
     DGPlayer.on('pause', onpause = function() {
@@ -47,6 +49,17 @@ function DGAuroraPlayer(player, DGPlayer) {
         }
     });
     
+/*    player.on('end', onend = function() {
+        // reset state
+        DGPlayer.state = 'paused';
+        DGPlayer.duration = 0;
+        DGPlayer.bufferProgress = 0;
+        DGPlayer.seekTime = 0;
+        DGPlayer.coverArt = UNKNOWN_ART;
+        DGPlayer.songTitle = 'Unknown Title';
+        DGPlayer.songArtist = 'Unknown Artist';
+    });
+*/    
     var originalDescription = DGPlayer.fileDescription;
     player.on('error', onerror = function(e) {
         // reset state
@@ -79,5 +92,6 @@ function DGAuroraPlayer(player, DGPlayer) {
         player.off('progress', onprogress);
         player.off('duration', onduration);
         player.off('metadata', onmetadata);
+        player.off('end', onend);
     };
 }
