@@ -4,6 +4,7 @@ rnr = {
 	// proprieties
 	player : null,
 	unsupported : null,
+	currentUrl : null,
 //	music_root : "http://192.168.3.130/RockNRoll/music/",
 	music_root : "music/",
 	
@@ -18,13 +19,13 @@ rnr = {
 		rnr.initPlayer(DGPlayer(document.getElementById('dgplayer')));
 	}
 	
-}
+};
 
 rnr.helpers = {
 	html : function(id){
 		return document.getElementById(id);
 	}
-}
+};
 
 rnr.getCollectionItem = function(path){
 	var el = collection.content;
@@ -41,6 +42,26 @@ rnr.getCollectionItemFromHash = function(){
 	path = path.split("^");
 	return rnr.getCollectionItem(path);
 	
+};
+
+rnr.getNextItem = function(url){
+	var path = url.split("/");
+	path = path.slice(1);
+	if(path.length > 0){
+		var thisItem = path[path.length-1];
+		var parentItemPath = path.slice(0,-1);
+		var parentItem = rnr.getCollectionItem(parentItemPath);
+		var getNext = false;
+		for(var i in parentItem.content){
+			if(getNext === true && parentItem.content[i].type === "flac"){
+				getNext = false;
+				return parentItem.content[i];
+			}
+			if(parentItem.content[i].path === (rnr.music_root + url))
+				getNext = true;
+		}
+		return null;
+	}
 };
 
 rnr.renderNavigationItems = function(path){
@@ -100,7 +121,7 @@ rnr.initPlayer = function(DGPlayer){
         }
     });
 */    
-}
+};
 
 rnr.startPlayer = function(url, DGPlayer){
 	if (url) {
@@ -109,8 +130,19 @@ rnr.startPlayer = function(url, DGPlayer){
 		if (rnr.player)
 			rnr.player.disconnect();
             
-		rnr.player = new DGAuroraPlayer(AV.Player.fromURL(rnr.music_root+url), DGPlayer);
+		rnr.player = new DGAuroraPlayer(AV.Player.fromURL(url), DGPlayer);
+//		rnr.player.player.on("end", rnr.onend = function(){
+//			rnr.playNext(rnr.currentUrl);
+//			this.off("end", rnr.onend);
+//		});
+//		rnr.currentUrl = url;
 	}
+};
+
+rnr.playNext = function(url){
+	var nextItem = rnr.getNextItem(url);
+	if(nextItem)
+		rnr.startPlayer(nextItem.path, DGPlayer(rnr.helpers.html("dgplayer")));
 };
 
 rnr.onNavigationClick = function(e, el){
@@ -130,7 +162,7 @@ rnr.onNavigationClick = function(e, el){
 		case "nav_item_flac":
 			var path = target.getAttribute("path") || "";
 			if(path)
-				rnr.startPlayer(path, DGPlayer(rnr.helpers.html("dgplayer")));
+				rnr.startPlayer((rnr.music_root+path), DGPlayer(rnr.helpers.html("dgplayer")));
 			break;
 		default :
 			if(target.parentNode)

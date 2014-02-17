@@ -12,10 +12,7 @@ function processFilename($filename){
 }
 
 function isFlac($filename){
-	if (preg_match("/(\.flac)$/", $filename))
-		return true;
-	else
-		return false;
+	return (preg_match("/(\.flac)$/", $filename));
 }
 
 function collectFolderStuff($dir, &$items) {
